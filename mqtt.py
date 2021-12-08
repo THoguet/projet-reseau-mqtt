@@ -50,6 +50,9 @@ def create_mqtt_connect_msg(client_ID):
 def create_mqtt_subscriber_msg(topic):
 	return
 
+def create_mqtt_suback_msg():
+	return
+
 def create_mqtt_connack_msg(accepted=True):
 	header = (TYPE_CONNACK).to_bytes(1,byteorder="big")
 	msglen = (2).to_bytes(1,byteorder="big")
