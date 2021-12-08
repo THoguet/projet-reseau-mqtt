@@ -9,30 +9,37 @@ import select
 from sys import stdin
 
 PORT = 1883
-
+TYPE_CONNECT = 0x10
+TYPE_PUBLISH = 0x30
 
 def create_mqtt_publish_msg(topic, value, retain=False):
-	""" create mqtt publish msg
-	>>> create_mqtt_publish_msg("temp","45")
-	b'0\\x08\\x00\\x04temp45'
-	"""
-	tmp = 48
-	if retain:
-		tmp += 1
-	#on cherche la taille de topic et value
-	topic.encode("utf-8")
-	topic_length = len(topic)
-	value.encode("utf-8")
-	value_length = len(value)
-	#total
-	message_length = value_length + topic_length + 2
-	request = (tmp).to_bytes(1, byteorder="big") + (message_length).to_bytes(1, byteorder = 'big') + (topic_length).to_bytes(2, byteorder = 'big') + topic.encode("utf-8") + value.encode("utf-8")
-	return request
+    """ create mqtt publish msg
+    >>> create_mqtt_publish_msg("temp","45")
+    b'0\\x08\\x00\\x04temp45'
+    """
+    retain_code = 0
+    if retain:
+        retain_code = 1
+    #on cherche la taille de topic et value
+    topic.encode("utf-8")
+    topic_length = len(topic)
+    value.encode("utf-8")
+    value_length = len(value)
+    #total
+    message_length = value_length + topic_length + 2
+    request = (TYPE_PUBLISH + retain_code).to_bytes(1, byteorder="big") + (message_length).to_bytes(1, byteorder = 'big') + (topic_length).to_bytes(2, byteorder = 'big') + topic.encode("utf-8") + value.encode("utf-8")
+    return request
 
-# def decode_msg(msg):
-# 	msg
+def create_mqtt_connect_msg(client_ID): 
+    client_ID.encode("utf-8")
+    client_ID_length = len(client_ID)
 
-print(create_mqtt_publish_msg("monsieur ", "théophyl")[0:1] == 0x30.to_bytes(1,byteorder="big"))
+    header = (TYPE_CONNECT).to_bytes(1, byteorder = "big")
+    message_length = 2 + 4 + 1 + 1 + 2 + client_ID_length + 2 # size protocol name length + size protocol name + size version + size CONNECT flags + size keep alive + size client id length + size client ID
+
+    
+
+print(create_mqtt_publish_msg("monsieur ", "théophyl").decode("utf-8"))
 
 def run_publisher(addr, topic, pub_id, retain=False):
 	"""
