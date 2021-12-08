@@ -7,7 +7,7 @@ import os
 import traceback
 import select
 from sys import byteorder, stdin
-from typing import BinaryIO
+from typing import BinaryIO, Tuple
 
 PORT = 1883
 TYPE_CONNECT = 0x10
@@ -100,12 +100,14 @@ def decode_msg(msg):
 		msgid = int.from_bytes(msg[2:4],byteorder="big")
 		return (typemsg,msgid)
 
-	if msg[:1] == TYPE_PUBLISH.to_bytes(1,byteorder="big"):
+	if msg[:1] == TYPE_PUBLISH.to_bytes(1,byteorder="big") or msg[:1] == (TYPE_PUBLISH+1).to_bytes(1,byteorder="big"):
 		typemsg = "PUBLISH"
 		topiclenght = int.from_bytes(msg[2:4],byteorder="big")
 		topic = msg[4:4+topiclenght].decode('utf-8')
 		message = msg[4+topiclenght:].decode('utf-8')
-		return (typemsg,topic,message)
+		if msg[:1] == TYPE_PUBLISH.to_bytes(1,byteorder="big"):
+			return (typemsg,topic,message,False)
+		return (typemsg,topic,message,True)
 	return tuple("ERROR")
 
 # print(create_mqtt_connect_msg("mosq-6F4yNCdkrVx80t8BVp"))
@@ -146,6 +148,7 @@ def run_server(addr):
 	s.bind(addr)
 	s.listen(1)
 	l = [s]
+	listconnected = []
 	while True:
 		l3, _, _ = select.select(l,[],[])
 		for i in l3:
@@ -157,5 +160,14 @@ def run_server(addr):
 				data = decode_msg(data)
 				if data[0] == "CONNECT":
 					i.sendall(create_mqtt_connack_msg(True))
-
+					listconnected.append([i,None])
+				elif data[0] == "SUBREQ":
+					for o in listconnected:
+						if i in o:
+							o[1] = data[2]
+					i.sendall(create_mqtt_suback_msg())
+				elif data[0] == "PUBLISH":
+					for o in listconnected:
+						if data[1] in o:
+							o[0].sendall(create_mqtt_publish_msg(data[1],data[2],data[3]))
 	pass
