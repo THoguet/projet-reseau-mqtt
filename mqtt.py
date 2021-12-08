@@ -25,21 +25,21 @@ def create_mqtt_publish_msg(topic, value, retain=False):
 	if retain:
 		retain_code = 1
 	#on cherche la taille de topic et value
-	topic.encode("utf-8")
+	topic.encode("ascii")
 	topic_length = len(topic)
-	value.encode("utf-8")
+	value.encode("ascii")
 	value_length = len(value)
 	#total
 	message_length = value_length + topic_length + 2
-	request = (TYPE_PUBLISH + retain_code).to_bytes(1, byteorder="big") + (message_length).to_bytes(1, byteorder = 'big') + (topic_length).to_bytes(2, byteorder = 'big') + topic.encode("utf-8") + value.encode("utf-8")
+	request = (TYPE_PUBLISH + retain_code).to_bytes(1, byteorder="big") + (message_length).to_bytes(1, byteorder = 'big') + (topic_length).to_bytes(2, byteorder = 'big') + topic.encode("ascii") + value.encode("ascii")
 	return request
 
 def create_mqtt_connect_msg(client_ID): 
-	client_ID = client_ID.encode("utf-8")
+	client_ID = client_ID.encode("ascii")
 	client_ID_length = len(client_ID).to_bytes(2,byteorder="big")
 
 	header = (TYPE_CONNECT).to_bytes(1, byteorder = "big")
-	proto_name = "MQTT".encode("utf-8")
+	proto_name = "MQTT".encode("ascii")
 	proto_lenght = len(proto_name).to_bytes(2, byteorder="big")
 	version = (4).to_bytes(1,byteorder="big")
 	connect_flags = (0x02).to_bytes(1,byteorder="big")
@@ -48,7 +48,7 @@ def create_mqtt_connect_msg(client_ID):
 	return (header + message_length + proto_lenght + proto_name + version + connect_flags + keepalive + client_ID_length + client_ID) 
 
 def create_mqtt_subscriber_msg(topic):
-	topic = topic.encode("utf-8")
+	topic = topic.encode("ascii")
 	topic_length = len(topic).to_bytes(2, byteorder = "big")
 	message_identifier = (1).to_bytes(2, byteorder = "big")
 	header = (TYPE_SUBREQ).to_bytes(1, byteorder = "big")
@@ -78,21 +78,21 @@ def decode_msg(msg):
 	if msg[:1] == TYPE_CONNECT.to_bytes(1,byteorder="big"):
 		typemsg = "CONNECT"
 		keepalive = int.from_bytes(msg[11:12],byteorder="big")
-		clientid = msg[14:].decode("utf-8")
+		clientid = msg[14:].decode("ascii")
 		return (typemsg,keepalive,clientid)
 
 	if msg[:1] == TYPE_CONNACK.to_bytes(1,byteorder='big'):
 		typemsg = "CONNACK"
-		ackflags = msg[2:3].decode('utf-8')
+		ackflags = msg[2:3].decode('ascii')
 		code = int.from_bytes(msg[3:4],byteorder="big")
 		return (typemsg,ackflags,code)
 
 
 	if msg[:1] == TYPE_SUBREQ.to_bytes(1,byteorder="big"):
 		typemsg = "SUBREQ"
-		msgid = int.from_bytes(msg[2:3],byteorder="big")
-		topiclenght = int.from_bytes(msg[3:4],byteorder="big")
-		topic = msg[4:4+topiclenght].decode('utf-8')
+		msgid = int.from_bytes(msg[2:4],byteorder="big")
+		topiclenght = int.from_bytes(msg[4:6],byteorder="big")
+		topic = msg[6:6+topiclenght].decode('ascii')
 		return (typemsg,msgid,topic)
 
 	if msg[:1] == TYPE_SUBACK.to_bytes(1,byteorder="big"):
@@ -103,8 +103,8 @@ def decode_msg(msg):
 	if msg[:1] == TYPE_PUBLISH.to_bytes(1,byteorder="big") or msg[:1] == (TYPE_PUBLISH+1).to_bytes(1,byteorder="big"):
 		typemsg = "PUBLISH"
 		topiclenght = int.from_bytes(msg[2:4],byteorder="big")
-		topic = msg[4:4+topiclenght].decode('utf-8')
-		message = msg[4+topiclenght:].decode('utf-8')
+		topic = msg[4:4+topiclenght].decode('ascii')
+		message = msg[4+topiclenght:].decode('ascii')
 		if msg[:1] == TYPE_PUBLISH.to_bytes(1,byteorder="big"):
 			return (typemsg,topic,message,False)
 		return (typemsg,topic,message,True)
@@ -122,7 +122,7 @@ def run_publisher(addr, topic, pub_id, retain=False):
 	connack = s.recv(127)
 	if decode_msg(connack)[0] == "CONNACK" and decode_msg(connack)[2] == 0:
 		while True:
-			msg = input()
+			msg = sys.stdin.readline()
 			s.sendall(create_mqtt_publish_msg(topic,msg,retain))
 	pass
 
@@ -145,6 +145,7 @@ def run_subscriber(addr, topic, sub_id):
 
 def run_server(addr):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	s.bind(addr)
 	s.listen(1)
 	l = [s]
