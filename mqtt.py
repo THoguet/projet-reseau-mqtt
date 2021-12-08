@@ -48,16 +48,20 @@ def create_mqtt_connect_msg(client_ID):
 	return (header + message_length + proto_lenght + proto_name + version + connect_flags + keepalive + client_ID_length + client_ID) 
 
 def create_mqtt_subscriber_msg(topic):
-    topic = topic.encode("utf-8")
-    topic_length = len(topic).to_bytes(2, byteorder = "big")
-    message_identifier = (1).to_bytes(2, byteorder = "big")
-    header = (TYPE_SUBREQ).to_bytes(1, byteorder = "big")
-    requested_qos = (0).to_bytes(1, byteorder = "big")
-    message_length = (1 + 2 + 2 + 6 + 1).to_bytes(1, byteorder = "big")
-    return (header + message_length + message_identifier + topic_length + topic + requested_qos)
+	topic = topic.encode("utf-8")
+	topic_length = len(topic).to_bytes(2, byteorder = "big")
+	message_identifier = (1).to_bytes(2, byteorder = "big")
+	header = (TYPE_SUBREQ).to_bytes(1, byteorder = "big")
+	requested_qos = (0).to_bytes(1, byteorder = "big")
+	message_length = (1 + 2 + 2 + 6 + 1).to_bytes(1, byteorder = "big")
+	return (header + message_length + message_identifier + topic_length + topic + requested_qos)
 
 def create_mqtt_suback_msg():
-	return
+	header = (TYPE_SUBACK).to_bytes(1, byteorder = "big")
+	message_identifier = (1).to_bytes(2, byteorder = "big")
+	requested_qos = (0).to_bytes(1, byteorder = "big")
+	message_length = (2 + 1).to_bytes(1, byteorder = "big")
+	return (header + message_length + message_identifier + requested_qos)
 
 def create_mqtt_connack_msg(accepted=True):
 	header = (TYPE_CONNACK).to_bytes(1,byteorder="big")
