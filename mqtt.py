@@ -40,15 +40,21 @@ def create_mqtt_connect_msg(client_ID):
 
 	header = (TYPE_CONNECT).to_bytes(1, byteorder = "big")
 	proto_name = "MQTT".encode("utf-8")
-	proto_lenght = len(proto_name).to_bytes(2,byteorder="big")
+	proto_lenght = len(proto_name).to_bytes(2, byteorder="big")
 	version = (4).to_bytes(1,byteorder="big")
 	connect_flags = (0x02).to_bytes(1,byteorder="big")
-	keepalive = (60).to_bytes(2,byteorder="big")
+	keepalive = (60).to_bytes(2, byteorder="big")
 	message_length = (2 + 4 + 1 + 1 + 2 + int.from_bytes(client_ID_length,byteorder="big") + 2).to_bytes(1,byteorder="big") # size protocol name length + size protocol name + size version + size CONNECT flags + size keep alive + size client id length + size client ID
 	return (header + message_length + proto_lenght + proto_name + version + connect_flags + keepalive + client_ID_length + client_ID) 
 
 def create_mqtt_subscriber_msg(topic):
-	return
+    topic = topic.encode("utf-8")
+    topic_length = len(topic).to_bytes(2, byteorder = "big")
+    message_identifier = (1).to_bytes(2, byteorder = "big")
+    header = (TYPE_SUBREQ).to_bytes(1, byteorder = "big")
+    requested_qos = (0).to_bytes(1, byteorder = "big")
+    message_length = (1 + 2 + 2 + 6 + 1).to_bytes(1, byteorder = "big")
+    return (header + message_length + message_identifier + topic_length + topic + requested_qos)
 
 def create_mqtt_suback_msg():
 	return
