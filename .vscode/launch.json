@@ -9,7 +9,16 @@
 			"type": "python",
 			"request": "launch",
 			"program": "./mqtt-client.py",
-			"args": ["-H","localhost","-p","1887","-t","temp","pub"],
+			"args": [
+				"-H",
+				"localhost",
+				"-p",
+				"1887",
+				"-t",
+				"temp",
+				"pub",
+				"-r"
+			],
 			"console": "integratedTerminal"
 		},
 		{
@@ -17,7 +26,15 @@
 			"type": "python",
 			"request": "launch",
 			"program": "./mqtt-client.py",
-			"args": ["-H","localhost","-p","1887","-t","temp","sub"],
+			"args": [
+				"-H",
+				"localhost",
+				"-p",
+				"1887",
+				"-t",
+				"TOTO",
+				"sub"
+			],
 			"console": "integratedTerminal"
 		},
 		{
