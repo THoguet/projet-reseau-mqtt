@@ -161,6 +161,7 @@ def run_publisher(addr, topic, pub_id, retain=False):
 		s.sendall(create_mqtt_disconnect_msg())
 	except KeyboardInterrupt:
 		s.sendall(create_mqtt_disconnect_msg())
+		s.close()
 
 
 def run_subscriber(addr, topic, sub_id):
@@ -188,6 +189,7 @@ def run_subscriber(addr, topic, sub_id):
 		pass
 	except KeyboardInterrupt:
 		s.sendall(create_mqtt_disconnect_msg())
+		s.close()
 
 
 def run_server(addr):
